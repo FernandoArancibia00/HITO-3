@@ -1,0 +1,75 @@
+[
+  {
+    "id": 1,
+    "nombre": "Libro: Cálculo de Stewart 8va Edición",
+    "precio": 25000,
+    "descripcion": "Libro en excelente estado, ideal para primer año de ingeniería. Sin rayones, incluye formulario intacto.",
+    "imagen": "https://http2.mlstatic.com/D_NQ_NP_970021-MLU77741616257_072024-O.webp",
+    "categoria": "libros",
+    "vendedor": "Juan Pérez (Ingeniería Civil Informática)"
+  },
+  {
+    "id": 2,
+    "nombre": "Calculadora Científica Casio FX-991",
+    "precio": 15000,
+    "descripcion": "Casi nueva, la vendo porque me regalaron otra. Batería operativa e incluye tapa protectora original.",
+    "imagen": "https://calculadoras-production.s3.sa-east-1.amazonaws.com/images/991ESPLUSNEGRA.webp",
+    "categoria": "tecnologia",
+    "vendedor": "María González (Arquitectura)"
+  },
+  {
+    "id": 3,
+    "nombre": "Notebook Dell Inspiron 15 (Core i5)",
+    "precio": 350000,
+    "descripcion": "Intel Core i5, 8GB RAM, 256GB SSD. Batería con 4 horas de autonomía, perfecto para clases y proyectos.",
+    "imagen": "https://i5.walmartimages.cl/asr/165e9694-8d8d-4441-9f34-8fc2d2b26f53.71d52b3fa4d5fb25e7b5d6eae7574f4f.jpeg?odnHeight=2000&odnWidth=2000&odnBg=ffffff",
+    "categoria": "tecnologia",
+    "vendedor": "Carlos Ruiz (Ingeniería en Computación)"
+  },
+  {
+    "id": 4,
+    "nombre": "Raqueta de Tenis Wilson Pro Staff",
+    "precio": 40000,
+    "descripcion": "Perfecta para electivos deportivos y entrenamientos en campus. Cuerdas recién cambiadas y funda incluida.",
+    "imagen": "https://cdnx.jumpseller.com/padel-shop-chile/image/75728640/resize/719/719?1776090972",
+    "categoria": "deportes",
+    "vendedor": "Ana Silva (Enfermería)"
+  },
+  {
+    "id": 5,
+    "nombre": "Libro: Campbell Biology 11th Edition",
+    "precio": 38000,
+    "descripcion": "Texto fundamental para estudiantes de Medicina, Odontología y Bioquímica. Tapa dura y hojas limpias.",
+    "imagen": "https://covers.openlibrary.org/b/id/8394461-M.jpg",
+    "categoria": "libros",
+    "vendedor": "Matías Morales (Medicina)"
+  },
+  {
+    "id": 6,
+    "nombre": "Set de Tiralíneas y Reglas Técnicas",
+    "precio": 12000,
+    "descripcion": "Pack de 6 tiralíneas graduados (0.1 a 0.8), escalímetro profesional y portaminas metálico.",
+    "imagen": "https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80",
+    "categoria": "utiles",
+    "vendedor": "Valentina Castro (Diseño Gráfico)"
+  },
+  {
+    "id": 7,
+    "nombre": "Audífonos Inalámbricos Sony WH-CH520",
+    "precio": 28000,
+    "descripcion": "Hasta 50 horas de batería, conexión multipunto, almohadillas impecables. Ideales para biblioteca.",
+    "imagen": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80",
+    "categoria": "tecnologia",
+    "vendedor": "Diego Fernández (Derecho)"
+  },
+  {
+    "id": 8,
+    "nombre": "Hervidor Eléctrico Compacto 1.2L",
+    "precio": 8000,
+    "descripcion": "Ideal para preparar té o café en departamento de estudiante o sala de estudio. Apagado automático.",
+    "imagen": "https://i5.walmartimages.cl/asr/497ee8cd-2950-4a65-9541-485a0658234f.783bdc7b93800fb1d82cbc5201b9e7a5.jpeg?odnHeight=2000&odnWidth=2000&odnBg=ffffff",
+    "categoria": "hogar",
+    "vendedor": "Camila Soto (Psicología)"
+  }
+]
+
