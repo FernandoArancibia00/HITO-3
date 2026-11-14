@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 
 export default function ProductDetailModal({
   producto,
@@ -88,7 +88,7 @@ export default function ProductDetailModal({
                   </div>
 
                   <div className="mb-3">
-                    <h6 className="text-uppercase text-muted small fw-bold mb-1">Descripción:</h6>
+                    <h6 className="text-uppercase text-muted small fw-bold mb-1">DescripciÃ³n:</h6>
                     <p className="text-secondary mb-0" style={{ whiteSpace: 'pre-line', lineHeight: '1.6' }}>
                       {descripcion}
                     </p>
@@ -124,7 +124,7 @@ export default function ProductDetailModal({
                 className="btn btn-outline-secondary d-flex align-items-center gap-1"
                 onClick={() => onToggleFavorito(producto)}
               >
-                <span>{esFavorito ? '❤️ En Favoritos' : '🤍 Guardar en Favoritos'}</span>
+                <span>{esFavorito ? 'â¤ï¸ En Favoritos' : 'ðŸ¤ Guardar en Favoritos'}</span>
               </button>
 
               <div className="d-flex gap-2">
@@ -143,7 +143,7 @@ export default function ProductDetailModal({
                   }}
                 >
                   <i className={`bi ${estaEnCarrito ? 'bi-check-circle' : 'bi-cart-plus'}`}></i>
-                  <span>{estaEnCarrito ? 'En el Carrito' : 'Añadir al Carrito'}</span>
+                  <span>{estaEnCarrito ? 'En el Carrito' : 'AÃ±adir al Carrito'}</span>
                 </button>
               </div>
             </div>
@@ -153,3 +153,4 @@ export default function ProductDetailModal({
     </>
   );
 }
+
