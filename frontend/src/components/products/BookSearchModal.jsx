@@ -65,11 +65,14 @@ export default function BookSearchModal({
   };
 
   const handleSelectBookItem = (book) => {
+    // Datos con los nombres del contrato para precargar ProductFormModal.
+    // Solo se usa la portada real de Open Library; si no hay, queda vacío y se usa la imagen por defecto.
+    const tienePortada = typeof book.imagen === 'string' && book.imagen.startsWith('https://covers.openlibrary.org/');
     const datosLibro = {
-      nombre: `Libro: ${book.titulo}`,
-      descripcion: `Libro universitario "${book.titulo}", escrito por ${book.autor} (${book.anio}). En excelente estado para ramos de pregrado.`,
-      imagen: book.imagen,
-      categoria: 'libros'
+      title: `Libro: ${book.titulo}`.slice(0, 150),
+      description: `Libro universitario "${book.titulo}", escrito por ${book.autor} (${book.anio}). En excelente estado para ramos de pregrado.`,
+      imageUrl: tienePortada ? book.imagen : '',
+      categorySlug: 'libros'
     };
 
     onSelectBook(datosLibro);
