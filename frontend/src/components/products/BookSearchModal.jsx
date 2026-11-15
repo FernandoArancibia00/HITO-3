@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { searchOpenLibraryBooks } from '../services/openLibraryApi';
+import { searchOpenLibraryBooks } from '../../services/openLibraryApi';
 
 export default function BookSearchModal({
   isOpen = false,
@@ -251,3 +251,4 @@ export default function BookSearchModal({
     </>
   );
 }
+

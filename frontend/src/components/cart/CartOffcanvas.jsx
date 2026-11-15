@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useCart } from '../context/CartContext';
+import { useCart } from '../../context/CartContext';
 
 export default function CartOffcanvas({
   isOpen = false,
@@ -265,3 +265,4 @@ export default function CartOffcanvas({
     </>
   );
 }
+
