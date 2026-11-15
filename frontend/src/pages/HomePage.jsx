@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+﻿import RecentProductsSection from '../components/products/RecentProductsSection';
+import React, { useState, useEffect, useMemo } from 'react';
 import initialProducts from '../data/products.json';
 import Navbar from '../components/layout/Navbar';
 import Sidebar from '../components/products/Sidebar';
@@ -491,6 +492,8 @@ export default function HomePage() {
         onSelectBook={handleSelectBook}
       />
 
+      <RecentProductsSection />
+
       {/* Offcanvas de Carrito */}
       <CartOffcanvas
         isOpen={isCartOpen}
@@ -512,5 +515,6 @@ export default function HomePage() {
     </div>
   );
 }
+
 
 
