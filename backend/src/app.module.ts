@@ -4,11 +4,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HealthModule } from './health/health.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
     HealthModule,
     ConversationsModule,
+    ActivityModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
