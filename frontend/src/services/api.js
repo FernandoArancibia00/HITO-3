@@ -1,5 +1,13 @@
 ﻿const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+// Función que se ejecuta cuando el backend responde 401 a una petición con token
+// (sesión expirada o token inválido). La registra AuthContext para cerrar sesión.
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler;
+}
+
 /**
  * Cliente HTTP centralizado para comunicarse con el backend NestJS.
  * Adjunta automáticamente el token JWT si existe en localStorage.
@@ -36,12 +44,14 @@ async function request(endpoint, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    if (response.status === 401) {
+    // Solo si se envió token: un 401 del login (credenciales malas) no debe cerrar sesión.
+    if (response.status === 401 && token) {
       localStorage.removeItem('token');
+      if (unauthorizedHandler) unauthorizedHandler();
     }
 
     const errorMessage =
-      (data && (Array.isArray(data.message) ? data.message.join(', ') : data.message)) ||
+      (data && (Array.isArray(data.message) ? data.message[0] : data.message)) ||
       `Error HTTP ${response.status}: ${response.statusText}`;
 
     const error = new Error(errorMessage);
