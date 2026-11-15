@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useCart } from '../context/CartContext';
+﻿import React, { useEffect } from 'react';
+import { useCart } from '../../context/CartContext';
 
 export default function CartOffcanvas({
   isOpen = false,
@@ -62,7 +62,7 @@ export default function CartOffcanvas({
     onClose();
   };
 
-  // Cálculo del total
+  // CÃ¡lculo del total
   const totalPagar = cartItems.reduce((acc, item) => {
     const prod = item.product || item;
     const precio = Number(prod.price ?? prod.precio ?? 0);
@@ -116,16 +116,16 @@ export default function CartOffcanvas({
           {cartItems.length === 0 ? (
             <div className="text-center my-auto py-5">
               <i className="bi bi-cart-x text-muted" style={{ fontSize: '4rem' }}></i>
-              <h5 className="mt-3 text-dark fw-bold">Tu carrito está vacío</h5>
+              <h5 className="mt-3 text-dark fw-bold">Tu carrito estÃ¡ vacÃ­o</h5>
               <p className="text-muted small px-3">
-                Explora el catálogo del campus y añade libros, equipos tecnológicos o apuntes que necesites.
+                Explora el catÃ¡logo del campus y aÃ±ade libros, equipos tecnolÃ³gicos o apuntes que necesites.
               </p>
               <button
                 type="button"
                 className="btn btn-outline-unab btn-sm mt-2"
                 onClick={onClose}
               >
-                Volver al catálogo
+                Volver al catÃ¡logo
               </button>
             </div>
           ) : (
@@ -201,7 +201,7 @@ export default function CartOffcanvas({
                             className="btn btn-outline-secondary px-2"
                             disabled={quantity >= stockDisponible}
                             onClick={() => handleUpdateQty(itemId, quantity + 1)}
-                            title={quantity >= stockDisponible ? 'Stock máximo alcanzado' : 'Aumentar cantidad'}
+                            title={quantity >= stockDisponible ? 'Stock mÃ¡ximo alcanzado' : 'Aumentar cantidad'}
                           >
                             <i className="bi bi-plus"></i>
                           </button>
@@ -219,7 +219,7 @@ export default function CartOffcanvas({
                     {quantity >= stockDisponible && (
                       <div className="small text-warning-emphasis bg-warning bg-opacity-10 rounded px-2 py-1 mt-2 text-center" style={{ fontSize: '0.75rem' }}>
                         <i className="bi bi-info-circle me-1"></i>
-                        Máximo stock disponible ({stockDisponible} un.)
+                        MÃ¡ximo stock disponible ({stockDisponible} un.)
                       </div>
                     )}
                   </div>
@@ -265,3 +265,4 @@ export default function CartOffcanvas({
     </>
   );
 }
+

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HealthModule } from './health/health.module';
 import { ConversationsModule } from './conversations/conversations.module';
+import { ActivityModule } from './activity/activity.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -11,6 +12,7 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     HealthModule,
     ConversationsModule,
+    ActivityModule,
     UsersModule,
     AuthModule,
     ConfigModule.forRoot({
