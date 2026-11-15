@@ -363,7 +363,7 @@ Response **200**:
 | --- | --- |
 | Autenticación | No |
 | Parámetros | `id`: entero |
-| Respuesta | **200** `{ id, name, career, campus, products: Product[] }` con solo los productos activos del usuario. No incluye correo, teléfono ni rol. |
+| Respuesta | **200** `{ id, name, career, campus, products: Product[] }` con solo los productos activos y con stock del usuario. No incluye correo, teléfono ni rol. |
 | Errores | **400** `id` no numérico · **404** el usuario no existe |
 
 Response **200**:
