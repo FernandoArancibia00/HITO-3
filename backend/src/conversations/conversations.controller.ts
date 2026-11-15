@@ -4,9 +4,8 @@
   Get,
   Param,
   Post,
-  Req,
   Res,
-  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -15,13 +14,16 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 
 @ApiTags('conversations')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('conversations')
 export class ConversationsController {
   constructor(private readonly conversationsService: ConversationsService) {}
@@ -36,8 +38,7 @@ export class ConversationsController {
       'Lista de conversaciones ordenadas por último mensaje con unreadCount',
   })
   @ApiResponse({ status: 401, description: 'No autenticado' })
-  async findMyConversations(@Req() req: Request) {
-    const userId = this.extractUserId(req);
+  async findMyConversations(@CurrentUser('sub') userId: number) {
     return this.conversationsService.findUserConversations(userId);
   }
 
@@ -54,11 +55,10 @@ export class ConversationsController {
   @ApiResponse({ status: 401, description: 'No autenticado' })
   @ApiResponse({ status: 404, description: 'Producto no encontrado' })
   async createConversation(
-    @Req() req: Request,
+    @CurrentUser('sub') userId: number,
     @Body() dto: CreateConversationDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const userId = this.extractUserId(req);
     const { conversation, created } =
       await this.conversationsService.createOrGetConversation(
         userId,
@@ -85,8 +85,10 @@ export class ConversationsController {
     description: 'No eres participante de esta conversación',
   })
   @ApiResponse({ status: 404, description: 'Conversación no encontrada' })
-  async getMessages(@Req() req: Request, @Param('id') id: string) {
-    const userId = this.extractUserId(req);
+  async getMessages(
+    @CurrentUser('sub') userId: number,
+    @Param('id') id: string,
+  ) {
     return this.conversationsService.getMessages(id, userId);
   }
 
@@ -102,47 +104,10 @@ export class ConversationsController {
   })
   @ApiResponse({ status: 404, description: 'Conversación no encontrada' })
   async sendMessage(
-    @Req() req: Request,
+    @CurrentUser('sub') userId: number,
     @Param('id') id: string,
     @Body() dto: CreateMessageDto,
   ) {
-    const userId = this.extractUserId(req);
     return this.conversationsService.sendMessage(id, userId, dto.text);
-  }
-
-  private extractUserId(req: Request): number {
-    const anyReq = req as any;
-    if (anyReq.user) {
-      const idFromUser = anyReq.user.sub ?? anyReq.user.id ?? anyReq.user.userId;
-      if (idFromUser !== undefined && !Number.isNaN(Number(idFromUser))) {
-        return Number(idFromUser);
-      }
-    }
-
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.slice(7).trim();
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(
-            Buffer.from(parts[1], 'base64url').toString('utf8'),
-          );
-          const idFromToken = payload.sub ?? payload.id ?? payload.userId;
-          if (idFromToken !== undefined && !Number.isNaN(Number(idFromToken))) {
-            return Number(idFromToken);
-          }
-        }
-      } catch {
-        throw new UnauthorizedException('Token inválido o expirado');
-      }
-    }
-
-    const headerUserId = req.headers['x-user-id'];
-    if (headerUserId && !Number.isNaN(Number(headerUserId))) {
-      return Number(headerUserId);
-    }
-
-    throw new UnauthorizedException('Debe iniciar sesión para acceder a las conversaciones');
   }
 }
