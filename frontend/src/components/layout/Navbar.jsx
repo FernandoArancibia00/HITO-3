@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React from 'react';
 
 export default function Navbar({
@@ -56,7 +57,22 @@ export default function Navbar({
               <span>+ Publicar Producto</span>
             </button>
 
-            <button
+                      <Link
+            to="/messages"
+            className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+          >
+            <i className="bi bi-chat-dots-fill"></i>
+            <span>Mensajes</span>
+          </Link>
+
+          <Link
+            to="/profile"
+            className="btn btn-outline-dark btn-sm d-flex align-items-center gap-1"
+          >
+            <i className="bi bi-person-circle"></i>
+            <span>Mi Perfil</span>
+          </Link>
+          <button
               type="button"
               className="nav-action-btn position-relative"
               onClick={onOpenFavorites}

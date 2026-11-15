@@ -1,28 +1,42 @@
-﻿import api from './api';
+import api from './api';
+
+const unwrap = (res) => (res && res.data !== undefined ? res.data : res);
 
 export const conversationService = {
-  async getMyConversations() {
-    const response = await api.get('/conversations');
-    return response.data;
+  async createOrGetConversation(productId) {
+    const res = await api.post('/conversations', { productId: Number(productId) });
+    return unwrap(res);
   },
 
-  async createOrGetConversation(productId) {
-    const response = await api.post('/conversations', {
-      productId: Number(productId),
-    });
-    return response.data;
+  async getConversations() {
+    const res = await api.get('/conversations');
+    const data = unwrap(res);
+    return Array.isArray(data) ? data : data?.items || data?.conversations || [];
+  },
+
+  async getMyConversations() {
+    return this.getConversations();
   },
 
   async getMessages(conversationId) {
-    const response = await api.get(`/conversations/${conversationId}/messages`);
-    return response.data;
+    const res = await api.get(`/conversations/${conversationId}/messages`);
+    const data = unwrap(res);
+    if (Array.isArray(data)) {
+      return { conversation: null, messages: data };
+    }
+    return {
+      conversation: data?.conversation || data || null,
+      messages: data?.messages || [],
+    };
+  },
+
+  async getConversationMessages(conversationId) {
+    return this.getMessages(conversationId);
   },
 
   async sendMessage(conversationId, text) {
-    const response = await api.post(`/conversations/${conversationId}/messages`, {
-      text: text.trim(),
-    });
-    return response.data;
+    const res = await api.post(`/conversations/${conversationId}/messages`, { text });
+    return unwrap(res);
   },
 };
 

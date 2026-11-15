@@ -1,4 +1,4 @@
-﻿import RecentProductsSection from '../components/products/RecentProductsSection';
+import RecentProductsSection from '../components/products/RecentProductsSection';
 import React, { useState, useEffect, useMemo } from 'react';
 import initialProducts from '../data/products.json';
 import Navbar from '../components/layout/Navbar';
@@ -11,29 +11,29 @@ import FavoritesOffcanvas from '../components/cart/FavoritesOffcanvas';
 import BookSearchModal from '../components/products/BookSearchModal';
 import '../styles/styles.css';
 
-// Lista dinÃ¡mica de categorÃ­as para el Sidebar y Formulario
+// Lista dinámica de categorías para el Sidebar y Formulario
 const CATEGORIAS = [
-  { id: 'todas', nombre: 'Todas las CategorÃ­as', icono: 'grid-fill' },
-  { id: 'libros', nombre: 'Apuntes y Libros FÃ­sicos', icono: 'book' },
-  { id: 'tecnologia', nombre: 'TecnologÃ­a y Accesorios', icono: 'laptop' },
+  { id: 'todas', nombre: 'Todas las Categorías', icono: 'grid-fill' },
+  { id: 'libros', nombre: 'Apuntes y Libros Físicos', icono: 'book' },
+  { id: 'tecnologia', nombre: 'Tecnología y Accesorios', icono: 'laptop' },
   { id: 'deportes', nombre: 'Deportes y Vida Sana', icono: 'trophy' },
-  { id: 'utiles', nombre: 'Ãštiles y PapelerÃ­a', icono: 'pencil-square' },
-  { id: 'hogar', nombre: 'ArtÃ­culos para el Hogar/Pieza', icono: 'house-door' },
+  { id: 'utiles', nombre: 'Útiles y Papelería', icono: 'pencil-square' },
+  { id: 'hogar', nombre: 'Artículos para el Hogar/Pieza', icono: 'house-door' },
   { id: 'snacks', nombre: 'Snacks y Colaciones', icono: 'cup-hot' }
 ];
 
 export default function HomePage() {
   // =========================================================
-  // 1. ESTADOS PRINCIPALES Y SINCRONIZACIÃ“N CON LOCALSTORAGE
+  // 1. ESTADOS PRINCIPALES Y SINCRONIZACIÓN CON LOCALSTORAGE
   // =========================================================
 
-  // CatÃ¡logo de productos (iniciado con products.json y persistido opcionalmente en localStorage)
+  // Catálogo de productos (iniciado con products.json y persistido opcionalmente en localStorage)
   const [products, setProducts] = useState(() => {
     try {
       const saved = localStorage.getItem('unab_marketplace_products');
       if (!saved) return initialProducts;
       const parsed = JSON.parse(saved);
-      // Mantiene consistencia de imÃ¡genes base actualizadas desde products.json
+      // Mantiene consistencia de imágenes base actualizadas desde products.json
       return parsed.map((item) => {
         const base = initialProducts.find((p) => p.id === item.id);
         return base ? { ...item, imagen: base.imagen } : item;
@@ -90,7 +90,7 @@ export default function HomePage() {
   }, [favorites]);
 
   // =========================================================
-  // 2. ESTADOS DE FILTROS Y BÃšSQUEDA
+  // 2. ESTADOS DE FILTROS Y BÚSQUEDA
   // =========================================================
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
@@ -110,7 +110,7 @@ export default function HomePage() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
 
-  // Alerta temporal de notificaciÃ³n
+  // Alerta temporal de notificación
   const [toastMessage, setToastMessage] = useState(null);
 
   const triggerToast = (mensaje) => {
@@ -121,11 +121,11 @@ export default function HomePage() {
   };
 
   // =========================================================
-  // 4. LÃ“GICA DE FILTRADO DERIVADO
+  // 4. LÓGICA DE FILTRADO DERIVADO
   // =========================================================
   const productosFiltrados = useMemo(() => {
     return products.filter((prod) => {
-      // 1. Filtro por tÃ©rmino de bÃºsqueda (nombre, descripciÃ³n o vendedor)
+      // 1. Filtro por término de búsqueda (nombre, descripción o vendedor)
       const busqueda = searchTerm.toLowerCase().trim();
       const matchBusqueda =
         !busqueda ||
@@ -133,16 +133,16 @@ export default function HomePage() {
         prod.descripcion.toLowerCase().includes(busqueda) ||
         prod.vendedor.toLowerCase().includes(busqueda);
 
-      // 2. Filtro por categorÃ­a seleccionada
+      // 2. Filtro por categoría seleccionada
       const matchCategoria =
         selectedCategoria === 'todas' ||
         prod.categoria.toLowerCase() === selectedCategoria.toLowerCase();
 
-      // 3. Filtro por precio mÃ­nimo
+      // 3. Filtro por precio mínimo
       const min = precioMin !== '' ? Number(precioMin) : 0;
       const matchMin = isNaN(min) || prod.precio >= min;
 
-      // 4. Filtro por precio mÃ¡ximo
+      // 4. Filtro por precio máximo
       const max = precioMax !== '' ? Number(precioMax) : Infinity;
       const matchMax = isNaN(max) || prod.precio <= max;
 
@@ -168,23 +168,23 @@ export default function HomePage() {
     setIsDetailModalOpen(true);
   };
 
-  // Agregar nueva publicaciÃ³n
+  // Agregar nueva publicación
   const handleAgregarProducto = (nuevoProducto) => {
     setProducts((prev) => [nuevoProducto, ...prev]);
     setImportedBookData(null);
-    triggerToast(`Â¡"${nuevoProducto.nombre}" fue publicado con Ã©xito!`);
+    triggerToast(`¡"${nuevoProducto.nombre}" fue publicado con éxito!`);
   };
 
-  // Eliminar publicaciÃ³n del catÃ¡logo
+  // Eliminar publicación del catálogo
   const handleEliminarProducto = (id) => {
     const productoAEliminar = products.find((p) => p.id === id);
     const confirmacion = window.confirm(
-      `Â¿Deseas eliminar la publicaciÃ³n "${productoAEliminar ? productoAEliminar.nombre : 'este producto'}"?`
+      `¿Deseas eliminar la publicación "${productoAEliminar ? productoAEliminar.nombre : 'este producto'}"?`
     );
 
     if (confirmacion) {
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      // TambiÃ©n lo removemos de carrito y favoritos si existÃ­a
+      // También lo removemos de carrito y favoritos si existía
       setCart((prev) => prev.filter((p) => p.id !== id));
       setFavorites((prev) => prev.filter((p) => p.id !== id));
 
@@ -192,7 +192,7 @@ export default function HomePage() {
         setIsDetailModalOpen(false);
         setSelectedProductForDetail(null);
       }
-      triggerToast('PublicaciÃ³n eliminada correctamente.');
+      triggerToast('Publicación eliminada correctamente.');
     }
   };
 
@@ -216,7 +216,7 @@ export default function HomePage() {
   };
 
   const handleVaciarCarrito = () => {
-    if (window.confirm('Â¿EstÃ¡s seguro de que deseas vaciar el carrito?')) {
+    if (window.confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
       setCart([]);
       triggerToast('Carrito vaciado.');
     }
@@ -233,7 +233,7 @@ export default function HomePage() {
       triggerToast(`"${producto.nombre}" eliminado de favoritos.`);
     } else {
       setFavorites((prev) => [...prev, producto]);
-      triggerToast(`"${producto.nombre}" aÃ±adido a tus favoritos â¤ï¸.`);
+      triggerToast(`"${producto.nombre}" añadido a tus favoritos ❤️.`);
     }
   };
 
@@ -246,17 +246,17 @@ export default function HomePage() {
   };
 
   // =========================================================
-  // 8. HANDLERS DE OPEN LIBRARY API E IMPORTACIÃ“N
+  // 8. HANDLERS DE OPEN LIBRARY API E IMPORTACIÓN
   // =========================================================
   const handleSelectBook = (bookData) => {
-    // Al seleccionar el libro en el modal de bÃºsqueda, alimentamos el formulario
+    // Al seleccionar el libro en el modal de búsqueda, alimentamos el formulario
     setImportedBookData(bookData);
     setIsBookSearchModalOpen(false);
     setIsFormModalOpen(true);
     triggerToast(`Datos de "${bookData.nombre}" importados al formulario.`);
   };
 
-  // Array de IDs en carrito para verificar estados rÃ¡pidos
+  // Array de IDs en carrito para verificar estados rápidos
   const cartIds = useMemo(() => cart.map((item) => item.id), [cart]);
 
   return (
@@ -274,7 +274,7 @@ export default function HomePage() {
         onOpenBookSearch={() => setIsBookSearchModalOpen(true)}
       />
 
-      {/* NotificaciÃ³n Flotante (Toast) */}
+      {/* Notificación Flotante (Toast) */}
       {toastMessage && (
         <div
           className="position-fixed bottom-0 end-0 p-3"
@@ -290,7 +290,7 @@ export default function HomePage() {
                 type="button"
                 className="btn-close btn-close-white me-2 m-auto"
                 onClick={() => setToastMessage(null)}
-                aria-label="Cerrar notificaciÃ³n"
+                aria-label="Cerrar notificación"
               ></button>
             </div>
           </div>
@@ -303,10 +303,10 @@ export default function HomePage() {
           <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
               <h1 className="h3 fw-bold text-dark mb-1">
-                CatÃ¡logo de Compraventa Estudiantil
+                Catálogo de Compraventa Estudiantil
               </h1>
               <p className="text-muted small mb-0">
-                Encuentra libros de asignaturas, tecnologÃ­a, apuntes y artÃ­culos ofrecidos por compaÃ±eros de la UNAB.
+                Encuentra libros de asignaturas, tecnología, apuntes y artículos ofrecidos por compañeros de la UNAB.
               </p>
             </div>
 
@@ -344,7 +344,7 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Columna Derecha: CatÃ¡logo de Publicaciones */}
+          {/* Columna Derecha: Catálogo de Publicaciones */}
           <div className="col-12 col-lg-9 col-xl-9">
             {/* Barra de estado de filtros activos */}
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -352,12 +352,12 @@ export default function HomePage() {
                 Mostrando <strong>{productosFiltrados.length}</strong> de <strong>{products.length}</strong> publicaciones
                 {selectedCategoria !== 'todas' && (
                   <span className="badge bg-secondary ms-2 text-capitalize">
-                    CategorÃ­a: {selectedCategoria}
+                    Categoría: {selectedCategoria}
                   </span>
                 )}
                 {searchTerm && (
                   <span className="badge bg-info text-dark ms-2">
-                    BÃºsqueda: "{searchTerm}"
+                    Búsqueda: "{searchTerm}"
                   </span>
                 )}
               </div>
@@ -380,7 +380,7 @@ export default function HomePage() {
                   <i className="bi bi-search text-muted" style={{ fontSize: '3.5rem' }}></i>
                   <h4 className="fw-bold mt-3 text-dark">No se encontraron productos</h4>
                   <p className="text-muted small mx-auto" style={{ maxWidth: '420px' }}>
-                    No hay publicaciones que coincidan con los criterios de bÃºsqueda aplicados. Intenta restablecer los filtros o publicar un nuevo artÃ­culo.
+                    No hay publicaciones que coincidan con los criterios de búsqueda aplicados. Intenta restablecer los filtros o publicar un nuevo artículo.
                   </p>
                   <div className="d-flex justify-content-center gap-2 mt-3">
                     <button
@@ -425,10 +425,10 @@ export default function HomePage() {
         <div className="container-fluid px-3 px-lg-4 text-center">
           <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2 text-muted small">
             <div>
-              <strong>Marketplace UNAB</strong> â€” Plataforma acadÃ©mica de intercambio estudiantil.
+              <strong>Marketplace UNAB</strong> — Plataforma académica de intercambio estudiantil.
             </div>
             <div>
-              <span>IntegraciÃ³n con </span>
+              <span>Integración con </span>
               <a
                 href="https://openlibrary.org/"
                 target="_blank"
@@ -469,7 +469,7 @@ export default function HomePage() {
         }
       />
 
-      {/* Modal de PublicaciÃ³n de Producto */}
+      {/* Modal de Publicación de Producto */}
       <ProductFormModal
         isOpen={isFormModalOpen}
         onClose={() => {

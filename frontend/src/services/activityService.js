@@ -1,31 +1,32 @@
-﻿import api from './api';
+import api from './api';
 
-/**
- * Servicio HTTP para el módulo de Actividad y Vistos Recientemente (MongoDB) — Tarea T33
- * Endpoints bajo /api/activity
- */
+const unwrap = (res) => (res && res.data !== undefined ? res.data : res);
+
 export const activityService = {
-  /**
-   * GET /api/activity/me?type=&limit=
-   * Obtiene el historial de actividad del usuario autenticado.
-   * @param {Object} params - { type?: string, limit?: number }
-   */
-  async getMyActivity({ type, limit = 20 } = {}) {
-    const params = { limit };
-    if (type) {
-      params.type = type;
-    }
-    const response = await api.get('/activity/me', { params });
-    return response.data;
+  async getMyActivity(paramsObj = {}) {
+    const type = typeof paramsObj === 'string' ? paramsObj : paramsObj?.type;
+    const limit = typeof paramsObj === 'object' && paramsObj?.limit ? paramsObj.limit : 20;
+    const params = new URLSearchParams();
+    if (type && type !== 'all') params.append('type', type);
+    if (limit) params.append('limit', String(limit));
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await api.get(`/activity/me${query}`);
+    const data = unwrap(res);
+    return Array.isArray(data) ? data : data?.items || data?.activities || data?.logs || [];
   },
 
-  /**
-   * GET /api/activity/me/recent-products
-   * Obtiene los últimos 10 productos vistos por el usuario (sin repetir).
-   */
+  async getActivity(paramsObj = {}) {
+    return this.getMyActivity(paramsObj);
+  },
+
   async getRecentProducts() {
-    const response = await api.get('/activity/me/recent-products');
-    return response.data;
+    const res = await api.get('/activity/me/recent-products');
+    const data = unwrap(res);
+    return Array.isArray(data) ? data : data?.items || data?.products || [];
+  },
+
+  async getMyRecentProducts() {
+    return this.getRecentProducts();
   },
 };
 

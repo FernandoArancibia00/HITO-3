@@ -1,23 +1,37 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import conversationService from '../../services/conversationService';
 
-export default function ProductDetailModal({
-  product,
-  show,
-  onClose,
-  isFavorite,
-  onToggleFavorite,
-}) {
+export default function ProductDetailModal(props) {
+  const {
+    product: propProduct,
+    producto: propProducto,
+    show,
+    isOpen,
+    onClose,
+    onCerrar,
+    isFavorite,
+    esFavorito,
+    onToggleFavorite,
+    onToggleFavorito,
+    onAgregarAlCarrito,
+  } = props;
+
+  const product = propProduct || propProducto;
+  const isModalOpen = Boolean(show ?? isOpen ?? product);
+  const handleClose = onClose || onCerrar || (() => {});
+  const favStatus = isFavorite ?? esFavorito ?? false;
+  const handleFav = onToggleFavorite || onToggleFavorito;
+
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [contacting, setContacting] = useState(false);
   const [contactError, setContactError] = useState(null);
 
-  if (!show || !product) return null;
+  if (!isModalOpen || !product) return null;
 
   const formatPrice = (price) =>
     new Intl.NumberFormat('es-CL', {
@@ -28,16 +42,18 @@ export default function ProductDetailModal({
   const handleContactSeller = async () => {
     setContactError(null);
     if (!isAuthenticated) {
-      onClose();
+      handleClose();
       navigate('/login');
       return;
     }
 
     setContacting(true);
     try {
-      const conv = await conversationService.createOrGetConversation(product.id);
+      const conv = await conversationService.createOrGetConversation(
+        Number(product.id)
+      );
       const convId = conv?.id || conv?._id;
-      onClose();
+      handleClose();
       if (convId) {
         navigate(`/messages/${convId}`);
       } else {
@@ -52,12 +68,21 @@ export default function ProductDetailModal({
     }
   };
 
+  const handleAddCart = () => {
+    if (onAgregarAlCarrito) {
+      onAgregarAlCarrito(product);
+    } else if (addToCart) {
+      addToCart(product);
+    }
+    handleClose();
+  };
+
   return (
     <div
       className="modal fade show d-block"
       tabIndex="-1"
-      style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
-      onClick={onClose}
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 1055 }}
+      onClick={handleClose}
     >
       <div
         className="modal-dialog modal-lg modal-dialog-centered"
@@ -71,7 +96,7 @@ export default function ProductDetailModal({
             <button
               type="button"
               className="btn-close btn-close-white"
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Cerrar"
             ></button>
           </div>
@@ -135,10 +160,7 @@ export default function ProductDetailModal({
                   <button
                     type="button"
                     className="btn btn-primary"
-                    onClick={() => {
-                      addToCart(product);
-                      onClose();
-                    }}
+                    onClick={handleAddCart}
                   >
                     <i className="bi bi-cart-plus me-2"></i>
                     Agregar al carrito
@@ -167,20 +189,20 @@ export default function ProductDetailModal({
                     )}
                   </button>
 
-                  {onToggleFavorite && (
+                  {handleFav && (
                     <button
                       type="button"
                       className={`btn ${
-                        isFavorite ? 'btn-danger' : 'btn-outline-danger'
+                        favStatus ? 'btn-danger' : 'btn-outline-danger'
                       }`}
-                      onClick={() => onToggleFavorite(product.id)}
+                      onClick={() => handleFav(product.id)}
                     >
                       <i
                         className={`bi ${
-                          isFavorite ? 'bi-heart-fill' : 'bi-heart'
+                          favStatus ? 'bi-heart-fill' : 'bi-heart'
                         } me-2`}
                       ></i>
-                      {isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                      {favStatus ? 'Quitar de favoritos' : 'Guardar en favoritos'}
                     </button>
                   )}
                 </div>

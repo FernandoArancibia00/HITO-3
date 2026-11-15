@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function ProductFormModal({
   isOpen = false,
@@ -59,21 +59,21 @@ export default function ProductFormModal({
     const nuevosErrores = {};
 
     if (!formData.nombre.trim()) {
-      nuevosErrores.nombre = 'El tÃ­tulo o nombre del producto es obligatorio.';
+      nuevosErrores.nombre = 'El título o nombre del producto es obligatorio.';
     }
 
     if (!formData.precio || Number(formData.precio) <= 0) {
-      nuevosErrores.precio = 'Ingresa un precio vÃ¡lido mayor a 0.';
+      nuevosErrores.precio = 'Ingresa un precio válido mayor a 0.';
     }
 
     if (!formData.categoria) {
-      nuevosErrores.categoria = 'Selecciona una categorÃ­a vÃ¡lida.';
+      nuevosErrores.categoria = 'Selecciona una categoría válida.';
     }
 
     if (!formData.descripcion.trim()) {
-      nuevosErrores.descripcion = 'La descripciÃ³n es obligatoria para informar a los compradores.';
+      nuevosErrores.descripcion = 'La descripción es obligatoria para informar a los compradores.';
     } else if (formData.descripcion.trim().length < 10) {
-      nuevosErrores.descripcion = 'La descripciÃ³n debe tener al menos 10 caracteres.';
+      nuevosErrores.descripcion = 'La descripción debe tener al menos 10 caracteres.';
     }
 
     if (!formData.vendedor.trim()) {
@@ -133,7 +133,7 @@ export default function ProductFormModal({
             <div className="modal-header modal-header-unab d-flex align-items-center justify-content-between">
               <h5 className="modal-title modal-title-unab m-0 d-flex align-items-center gap-2" id="modalPublicarTitulo">
                 <i className="bi bi-tag-fill"></i>
-                <span>Crear Nueva PublicaciÃ³n</span>
+                <span>Crear Nueva Publicación</span>
               </h5>
               <button
                 type="button"
@@ -149,9 +149,9 @@ export default function ProductFormModal({
                   <div className="d-flex align-items-center gap-2">
                     <i className="bi bi-book-half fs-4 text-unab"></i>
                     <div>
-                      <strong className="d-block text-dark">Â¿Vas a publicar un libro universitario?</strong>
+                      <strong className="d-block text-dark">¿Vas a publicar un libro universitario?</strong>
                       <span className="small text-muted">
-                        Ahorra tiempo buscando el libro en Open Library para autocompletar tÃ­tulo, autor e imagen.
+                        Ahorra tiempo buscando el libro en Open Library para autocompletar título, autor e imagen.
                       </span>
                     </div>
                   </div>
@@ -177,14 +177,14 @@ export default function ProductFormModal({
                 <div className="row g-3">
                   <div className="col-12 col-md-8">
                     <label htmlFor="inputNombre" className="form-label fw-bold small">
-                      TÃ­tulo de la PublicaciÃ³n <span className="text-danger">*</span>
+                      Título de la Publicación <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
                       id="inputNombre"
                       name="nombre"
                       className={`form-control ${errores.nombre ? 'is-invalid' : ''}`}
-                      placeholder="Ej: Libro CÃ¡lculo Stewart 8va EdiciÃ³n"
+                      placeholder="Ej: Libro Cálculo Stewart 8va Edición"
                       value={formData.nombre}
                       onChange={handleChange}
                     />
@@ -193,7 +193,7 @@ export default function ProductFormModal({
 
                   <div className="col-12 col-md-4">
                     <label htmlFor="selectCategoria" className="form-label fw-bold small">
-                      CategorÃ­a <span className="text-danger">*</span>
+                      Categoría <span className="text-danger">*</span>
                     </label>
                     <select
                       id="selectCategoria"
@@ -241,7 +241,7 @@ export default function ProductFormModal({
                       id="inputVendedor"
                       name="vendedor"
                       className={`form-control ${errores.vendedor ? 'is-invalid' : ''}`}
-                      placeholder="Ej: MatÃ­as Morales (IngenierÃ­a Civil InformÃ¡tica)"
+                      placeholder="Ej: Matías Morales (Ingeniería Civil Informática)"
                       value={formData.vendedor}
                       onChange={handleChange}
                     />
@@ -250,7 +250,7 @@ export default function ProductFormModal({
 
                   <div className="col-12">
                     <label htmlFor="inputImagen" className="form-label fw-bold small">
-                      URL de la Imagen <span className="text-muted fw-normal">(Opcional, se usarÃ¡ imagen por defecto)</span>
+                      URL de la Imagen <span className="text-muted fw-normal">(Opcional, se usará imagen por defecto)</span>
                     </label>
                     <input
                       type="url"
@@ -266,7 +266,7 @@ export default function ProductFormModal({
                         <span className="small text-muted">Vista previa:</span>
                         <img
                           src={formData.imagen}
-                          alt="PrevisualizaciÃ³n"
+                          alt="Previsualización"
                           style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                           className="border rounded p-1 bg-white"
                           onError={(e) => {
@@ -279,7 +279,7 @@ export default function ProductFormModal({
 
                   <div className="col-12">
                     <label htmlFor="inputDescripcion" className="form-label fw-bold small">
-                      DescripciÃ³n del Producto <span className="text-danger">*</span>
+                      Descripción del Producto <span className="text-danger">*</span>
                     </label>
                     <textarea
                       id="inputDescripcion"
