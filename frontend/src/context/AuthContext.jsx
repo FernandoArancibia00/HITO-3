@@ -41,6 +41,20 @@ export function AuthProvider({ children }) {
     [saveSession],
   );
 
+  // Actualiza los datos del usuario guardado (ej. al editar el perfil) sin tocar el token.
+  // Solo guarda los campos de la sesión, para que el user mantenga la misma forma del login.
+  const updateUser = useCallback((changes) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev };
+      ['name', 'email', 'role', 'career', 'campus'].forEach((key) => {
+        if (changes[key] !== undefined) next[key] = changes[key];
+      });
+      localStorage.setItem(USER_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -62,8 +76,9 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      updateUser,
     }),
-    [user, token, login, register, logout],
+    [user, token, login, register, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
