@@ -7,6 +7,8 @@ import { ConversationsModule } from './conversations/conversations.module';
 import { ActivityModule } from './activity/activity.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
     ActivityModule,
     UsersModule,
     AuthModule,
+    CategoriesModule,
+    ProductsModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
