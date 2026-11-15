@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export default function ProductCard({
   producto,
@@ -23,20 +23,20 @@ export default function ProductCard({
           type="button"
           className="btn-card-fav"
           onClick={() => onToggleFavorito(producto)}
-          title={esFavorito ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-          aria-label={esFavorito ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+          title={esFavorito ? 'Quitar de favoritos' : 'AÃ±adir a favoritos'}
+          aria-label={esFavorito ? 'Quitar de favoritos' : 'AÃ±adir a favoritos'}
         >
-          {esFavorito ? '❤️' : '🤍'}
+          {esFavorito ? 'â¤ï¸' : 'ðŸ¤'}
         </button>
 
         <button
           type="button"
           className="btn-card-delete"
           onClick={() => onEliminarProducto(id)}
-          title="Eliminar publicación"
-          aria-label="Eliminar publicación"
+          title="Eliminar publicaciÃ³n"
+          aria-label="Eliminar publicaciÃ³n"
         >
-          ✕
+          âœ•
         </button>
 
         <div className="product-img-wrapper">
@@ -95,7 +95,7 @@ export default function ProductCard({
               ) : (
                 <>
                   <i className="bi bi-cart-plus"></i>
-                  <span>Añadir al Carrito</span>
+                  <span>AÃ±adir al Carrito</span>
                 </>
               )}
             </button>
@@ -105,3 +105,4 @@ export default function ProductCard({
     </div>
   );
 }
+

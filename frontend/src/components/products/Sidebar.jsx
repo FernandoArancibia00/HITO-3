@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 export default function Sidebar({
   searchTerm,
@@ -38,7 +38,7 @@ export default function Sidebar({
               id="inputSearch"
               type="text"
               className="form-control border-start-0 ps-0"
-              placeholder="Buscar por nombre, autor, descripción..."
+              placeholder="Buscar por nombre, autor, descripciÃ³n..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -68,10 +68,10 @@ export default function Sidebar({
                   min="0"
                   step="500"
                   className="form-control"
-                  placeholder="Mínimo"
+                  placeholder="MÃ­nimo"
                   value={precioMin}
                   onChange={(e) => setPrecioMin(e.target.value)}
-                  aria-label="Precio mínimo"
+                  aria-label="Precio mÃ­nimo"
                 />
               </div>
             </div>
@@ -83,10 +83,10 @@ export default function Sidebar({
                   min="0"
                   step="500"
                   className="form-control"
-                  placeholder="Máximo"
+                  placeholder="MÃ¡ximo"
                   value={precioMax}
                   onChange={(e) => setPrecioMax(e.target.value)}
-                  aria-label="Precio máximo"
+                  aria-label="Precio mÃ¡ximo"
                 />
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function Sidebar({
 
         <div className="mb-4">
           <label className="form-label small fw-bold text-muted text-uppercase mb-2">
-            Categorías
+            CategorÃ­as
           </label>
           <div className="category-list">
             {categorias.map((cat) => {
@@ -130,3 +130,4 @@ export default function Sidebar({
     </aside>
   );
 }
+

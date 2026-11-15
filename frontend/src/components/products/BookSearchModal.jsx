@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { searchOpenLibraryBooks } from '../services/openLibraryApi';
+﻿import React, { useState, useEffect } from 'react';
+import { searchOpenLibraryBooks } from '../../services/openLibraryApi';
 
 export default function BookSearchModal({
   isOpen = false,
@@ -26,7 +26,7 @@ export default function BookSearchModal({
     if (e) e.preventDefault();
 
     if (!query.trim()) {
-      setError('Por favor escribe un título, autor o tema a buscar.');
+      setError('Por favor escribe un tÃ­tulo, autor o tema a buscar.');
       return;
     }
 
@@ -38,7 +38,7 @@ export default function BookSearchModal({
       const books = await searchOpenLibraryBooks(query);
       setResults(books);
     } catch (err) {
-      setError(err.message || 'Ocurrió un error al buscar en Open Library.');
+      setError(err.message || 'OcurriÃ³ un error al buscar en Open Library.');
       setResults([]);
     } finally {
       setLoading(false);
@@ -56,7 +56,7 @@ export default function BookSearchModal({
         setResults(books);
       })
       .catch((err) => {
-        setError(err.message || 'Error en la búsqueda');
+        setError(err.message || 'Error en la bÃºsqueda');
         setResults([]);
       })
       .finally(() => {
@@ -100,7 +100,7 @@ export default function BookSearchModal({
               <div className="d-flex align-items-center gap-2">
                 <i className="bi bi-book-half fs-4 text-unab"></i>
                 <h5 className="modal-title modal-title-unab m-0" id="modalBookSearchTitulo">
-                  Búsqueda Bibliográfica (Open Library API)
+                  BÃºsqueda BibliogrÃ¡fica (Open Library API)
                 </h5>
               </div>
               <button
@@ -113,7 +113,7 @@ export default function BookSearchModal({
 
             <div className="modal-body p-4">
               <p className="text-muted small mb-3">
-                Busca cualquier texto de estudio en la base de datos de <strong>Open Library</strong> y haz clic en <em>"Usar Datos para Publicar"</em> para autocompletar automáticamente el formulario de publicación.
+                Busca cualquier texto de estudio en la base de datos de <strong>Open Library</strong> y haz clic en <em>"Usar Datos para Publicar"</em> para autocompletar automÃ¡ticamente el formulario de publicaciÃ³n.
               </p>
 
               <form onSubmit={handleSearch} className="mb-3">
@@ -124,7 +124,7 @@ export default function BookSearchModal({
                   <input
                     type="text"
                     className="form-control border-start-0 ps-0"
-                    placeholder="Ej: Calculus Stewart, Biology Campbell, Física Tipler, Clean Code..."
+                    placeholder="Ej: Calculus Stewart, Biology Campbell, FÃ­sica Tipler, Clean Code..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     autoFocus
@@ -150,8 +150,8 @@ export default function BookSearchModal({
               </form>
 
               <div className="d-flex flex-wrap align-items-center gap-1 mb-4">
-                <span className="small text-muted me-1">Sugerencias rápidas:</span>
-                {['Calculus Stewart', 'Campbell Biology', 'Física Universitaria', 'Data Structures'].map((sug) => (
+                <span className="small text-muted me-1">Sugerencias rÃ¡pidas:</span>
+                {['Calculus Stewart', 'Campbell Biology', 'FÃ­sica Universitaria', 'Data Structures'].map((sug) => (
                   <button
                     key={sug}
                     type="button"
@@ -177,7 +177,7 @@ export default function BookSearchModal({
                     <span className="visually-hidden">Cargando...</span>
                   </div>
                   <div className="mt-3 text-muted fw-bold">Consultando Open Library API...</div>
-                  <small className="text-muted">Extrayendo carátulas y metadatos de libros</small>
+                  <small className="text-muted">Extrayendo carÃ¡tulas y metadatos de libros</small>
                 </div>
               )}
 
@@ -185,7 +185,7 @@ export default function BookSearchModal({
                 <div className="text-center py-4">
                   <i className="bi bi-journal-x text-muted" style={{ fontSize: '3rem' }}></i>
                   <h6 className="mt-3 text-dark fw-bold">No se encontraron libros para "{query}"</h6>
-                  <p className="text-muted small">Intenta buscar con otro término, en inglés o por nombre de autor.</p>
+                  <p className="text-muted small">Intenta buscar con otro tÃ©rmino, en inglÃ©s o por nombre de autor.</p>
                 </div>
               )}
 
@@ -216,7 +216,7 @@ export default function BookSearchModal({
                         </div>
                         <div className="text-muted small">
                           <i className="bi bi-calendar-event me-1"></i>
-                          <strong>1ª Publicación:</strong> {libro.anio}
+                          <strong>1Âª PublicaciÃ³n:</strong> {libro.anio}
                         </div>
                       </div>
 
@@ -251,3 +251,4 @@ export default function BookSearchModal({
     </>
   );
 }
+
