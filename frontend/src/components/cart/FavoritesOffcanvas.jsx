@@ -76,8 +76,8 @@ export default function FavoritesOffcanvas({
                   <div key={producto.id} className="offcanvas-item-card flex-column align-items-stretch">
                     <div className="d-flex align-items-center gap-3">
                       <img
-                        src={producto.imagen || 'https://placehold.co/100x100/ad0f0f/ffffff?text=UNAB'}
-                        alt={producto.nombre}
+                        src={producto.imageUrl || 'https://placehold.co/100x100/ad0f0f/ffffff?text=UNAB'}
+                        alt={producto.title}
                         className="offcanvas-item-img"
                         onError={(e) => {
                           e.target.onerror = null;
@@ -86,15 +86,15 @@ export default function FavoritesOffcanvas({
                       />
 
                       <div className="flex-grow-1 min-w-0">
-                        <h6 className="mb-1 text-truncate fw-bold text-dark" title={producto.nombre}>
-                          {producto.nombre}
+                        <h6 className="mb-1 text-truncate fw-bold text-dark" title={producto.title}>
+                          {producto.title}
                         </h6>
                         <div className="small text-unab fw-bold mb-1">
-                          ${producto.precio.toLocaleString('es-CL')} CLP
+                          ${producto.price.toLocaleString('es-CL')} CLP
                         </div>
                         <div className="small text-muted text-truncate" style={{ fontSize: '0.78rem' }}>
                           <i className="bi bi-person me-1"></i>
-                          {producto.vendedor}
+                          {producto.seller?.name}
                         </div>
                       </div>
 
@@ -104,7 +104,7 @@ export default function FavoritesOffcanvas({
                         style={{ width: '32px', height: '32px', flexShrink: 0 }}
                         onClick={() => onEliminarFavorito(producto.id)}
                         title="Quitar de favoritos"
-                        aria-label={`Quitar ${producto.nombre} de favoritos`}
+                        aria-label={`Quitar ${producto.title} de favoritos`}
                       >
                         <i className="bi bi-x-lg"></i>
                       </button>

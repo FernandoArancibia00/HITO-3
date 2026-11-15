@@ -1,5 +1,14 @@
 import React from 'react';
 
+// Opción fija "Todas": slug vacío = no se envía el query param `category`.
+const ALL_CATEGORIES = { slug: '', name: 'Todas las Categorías', icon: 'grid-fill' };
+
+const CONDITION_OPTIONS = [
+  { value: '', label: 'Todas' },
+  { value: 'nuevo', label: 'Nuevo' },
+  { value: 'usado', label: 'Usado' },
+];
+
 export default function Sidebar({
   searchTerm,
   setSearchTerm,
@@ -9,8 +18,13 @@ export default function Sidebar({
   setPrecioMin,
   precioMax,
   setPrecioMax,
+  condicion,
+  setCondicion,
   onLimpiarFiltros,
   categorias = [],
+  categoriasLoading = false,
+  categoriasError = null,
+  onReintentarCategorias,
   totalResultados = 0
 }) {
   return (
@@ -38,7 +52,7 @@ export default function Sidebar({
               id="inputSearch"
               type="text"
               className="form-control border-start-0 ps-0"
-              placeholder="Buscar por nombre, autor, descripción..."
+              placeholder="Buscar por título, descripción o vendedor..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -55,7 +69,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-3">
           <label className="form-label small fw-bold text-muted text-uppercase mb-1">
             Rango de Precio ($ CLP)
           </label>
@@ -94,22 +108,59 @@ export default function Sidebar({
         </div>
 
         <div className="mb-4">
+          <label className="form-label small fw-bold text-muted text-uppercase mb-1">
+            Condición
+          </label>
+          <div className="btn-group btn-group-sm w-100" role="group" aria-label="Filtrar por condición">
+            {CONDITION_OPTIONS.map((opt) => (
+              <button
+                key={opt.value || 'todas'}
+                type="button"
+                className={`btn ${condicion === opt.value ? 'btn-unab' : 'btn-outline-secondary'}`}
+                onClick={() => setCondicion(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-4">
           <label className="form-label small fw-bold text-muted text-uppercase mb-2">
             Categorías
           </label>
+
+          {categoriasLoading && (
+            <div className="small text-muted d-flex align-items-center gap-2 mb-2">
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+              Cargando categorías...
+            </div>
+          )}
+
+          {categoriasError && (
+            <div className="alert alert-warning py-2 px-2 small mb-2">
+              {categoriasError}
+              {onReintentarCategorias && (
+                <button type="button" className="btn btn-link btn-sm p-0 ms-1 align-baseline" onClick={onReintentarCategorias}>
+                  Reintentar
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="category-list">
-            {categorias.map((cat) => {
-              const isActive = selectedCategoria === cat.id;
+            {[ALL_CATEGORIES, ...categorias].map((cat) => {
+              const isActive = selectedCategoria === cat.slug;
               return (
                 <button
-                  key={cat.id}
+                  key={cat.slug || 'todas'}
                   type="button"
                   className={`category-filter-btn ${isActive ? 'active' : ''}`}
-                  onClick={() => setSelectedCategoria(cat.id)}
+                  onClick={() => setSelectedCategoria(cat.slug)}
                 >
                   <span className="d-flex align-items-center gap-2">
-                    {cat.icono && <i className={`bi bi-${cat.icono}`}></i>}
-                    <span>{cat.nombre}</span>
+                    {cat.icon && <i className={`bi bi-${cat.icon}`}></i>}
+                    <span>{cat.name}</span>
                   </span>
                   {isActive && <i className="bi bi-check2"></i>}
                 </button>
@@ -130,4 +181,3 @@ export default function Sidebar({
     </aside>
   );
 }
-
