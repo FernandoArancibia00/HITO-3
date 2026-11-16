@@ -2,22 +2,10 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import useFavorites from '../hooks/useFavorites';
 import Navbar from '../components/layout/Navbar';
 import ProductCard from '../components/products/ProductCard';
 import userService from '../services/userService';
-
-// Misma clave que usa HomePage para los favoritos locales (hasta T24).
-const FAVORITES_KEY = 'unab_marketplace_favorites';
-
-function readFavorites() {
-  try {
-    const saved = localStorage.getItem(FAVORITES_KEY);
-    const parsed = saved ? JSON.parse(saved) : [];
-    return Array.isArray(parsed) ? parsed.filter((p) => p && p.title && p.price !== undefined) : [];
-  } catch {
-    return [];
-  }
-}
 
 // Página /users/:id (pública): datos públicos del vendedor y sus productos activos con stock.
 export default function SellerProfilePage() {
@@ -25,12 +13,17 @@ export default function SellerProfilePage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { items: cartItems, totalItems, addToCart, error: cartError } = useCart();
+  const {
+    favorites,
+    notice: favoritesNotice,
+    dismissNotice: dismissFavoritesNotice,
+    toggleFavorite,
+  } = useFavorites();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notFound, setNotFound] = useState(false);
-  const [favorites, setFavorites] = useState(readFavorites);
   const [message, setMessage] = useState(null);
 
   // GET /users/:id. 404 (no existe) y 400 (id no numérico) se muestran como "no encontrado".
@@ -57,14 +50,6 @@ export default function SellerProfilePage() {
     loadProfile();
   }, [loadProfile]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-    } catch {
-      // Ignorar errores de almacenamiento local
-    }
-  }, [favorites]);
-
   const cartIds = useMemo(
     () => cartItems.map((item) => item.product?.id ?? item.productId),
     [cartItems]
@@ -88,18 +73,6 @@ export default function SellerProfilePage() {
     }
     await addToCart(producto);
     showMessage(`"${producto.title}" se agregó al carrito.`);
-  };
-
-  const handleToggleFavorito = (producto) => {
-    const yaEsFavorito = favorites.some((f) => f.id === producto.id);
-    setFavorites((prev) =>
-      yaEsFavorito ? prev.filter((f) => f.id !== producto.id) : [...prev, producto]
-    );
-    showMessage(
-      yaEsFavorito
-        ? `"${producto.title}" eliminado de favoritos.`
-        : `"${producto.title}" añadido a tus favoritos.`
-    );
   };
 
   const renderContenido = () => {
@@ -190,7 +163,7 @@ export default function SellerProfilePage() {
                 producto={producto}
                 onVerDetalles={handleVerDetalles}
                 onAgregarAlCarrito={handleAgregarAlCarrito}
-                onToggleFavorito={handleToggleFavorito}
+                onToggleFavorito={toggleFavorite}
                 esFavorito={favorites.some((f) => f.id === producto.id)}
                 estaEnCarrito={cartIds.includes(producto.id)}
               />
@@ -213,6 +186,20 @@ export default function SellerProfilePage() {
       />
 
       <main className="container py-4 flex-grow-1">
+        {favoritesNotice && (
+          <div
+            className={`alert alert-${favoritesNotice.type} py-2 d-flex align-items-center justify-content-between gap-2`}
+            role={favoritesNotice.type === 'danger' ? 'alert' : 'status'}
+          >
+            <span>{favoritesNotice.message}</span>
+            <button
+              type="button"
+              className="btn-close"
+              aria-label="Cerrar aviso de favoritos"
+              onClick={dismissFavoritesNotice}
+            ></button>
+          </div>
+        )}
         {message && (
           <div className="alert alert-success py-2 d-flex align-items-center gap-2" role="status">
             <i className="bi bi-check-circle-fill"></i>

@@ -1,14 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import orderService from '../services/orderService';
 import { getStatusBadge } from './MyOrdersPage';
 
 export default function OrderDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionSuccess, setActionSuccess] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const isBuyer = Boolean(user?.id && Number(order?.buyerId) === Number(user.id));
+  const isSeller = Boolean(
+    user?.id &&
+    order?.items?.some((item) => Number(item.sellerId) === Number(user.id))
+  );
 
   const timelineSteps = [
     { key: 'pendiente', label: 'Pedido Creado', icon: 'bi-file-earmark-text' },
@@ -47,41 +57,112 @@ export default function OrderDetailPage() {
     return 'pendiente';
   };
 
+  const applyOrderUpdate = (updatedOrder, transaction) => {
+    setOrder((prev) => {
+      if (!prev) return updatedOrder;
+      return {
+        ...prev,
+        ...updatedOrder,
+        buyer: updatedOrder.buyer ?? prev.buyer,
+        items: updatedOrder.items ?? prev.items,
+        transactions:
+          updatedOrder.transactions ??
+          (transaction ? [...(prev.transactions || []), transaction] : prev.transactions),
+      };
+    });
+  };
+
   const handleCancelar = async () => {
-    if (['enviado', 'listo_retiro', 'entregado'].includes(order.status)) {
-      alert('No es posible cancelar un pedido que ya está en camino o entregado.');
+    if (!isBuyer || !['pendiente', 'pagado'].includes(order.status)) {
+      setActionError('No puedes cancelar este pedido en su estado actual.');
       return;
     }
 
     const confirmar = window.confirm(`¿Confirmas la cancelación del Pedido #${order.id}? El stock reservado será restaurado.`);
     if (!confirmar) return;
 
+    setActionLoading(true);
+    setActionError(null);
+    setActionSuccess(null);
     try {
-      const res = await orderService.updateOrderStatus(order.id, 'cancelado');
-      setOrder((prev) => ({ ...prev, status: 'cancelado' }));
+      const updatedOrder = await orderService.updateOrderStatus(order.id, 'cancelado');
+      if (updatedOrder?.status !== 'cancelado') {
+        throw new Error('El servidor no confirmó la cancelación del pedido.');
+      }
+      applyOrderUpdate(updatedOrder);
       setActionSuccess('El pedido ha sido cancelado exitosamente y el stock fue liberado.');
     } catch (err) {
-      alert(err.message || 'Error al cancelar el pedido.');
+      setActionError(err?.message || 'Error al cancelar el pedido.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleCambiarEstado = async (newStatus) => {
+    const sellerTransitionAllowed =
+      (order.status === 'pagado' && ['enviado', 'listo_retiro'].includes(newStatus)) ||
+      (['enviado', 'listo_retiro'].includes(order.status) && newStatus === 'entregado');
+    if (!isSeller || !sellerTransitionAllowed) {
+      setActionError('No puedes cambiar este pedido al estado solicitado.');
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError(null);
+    setActionSuccess(null);
+    try {
+      const updatedOrder = await orderService.updateOrderStatus(order.id, newStatus);
+      if (updatedOrder?.status !== newStatus) {
+        throw new Error('El servidor no confirmó el cambio de estado.');
+      }
+      applyOrderUpdate(updatedOrder);
+      setActionSuccess(`El pedido quedó en estado "${newStatus}".`);
+    } catch (err) {
+      setActionError(err?.message || 'Error al actualizar el estado del pedido.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handlePagar = async () => {
+    if (!isBuyer || order.status !== 'pendiente') {
+      setActionError('Solo puedes pagar tus pedidos pendientes.');
+      return;
+    }
+
     const cardInput = window.prompt(
       'Ingresa los 16 dígitos de la tarjeta para simular el pago:\n(Termina en 0000 para probar RECHAZO; cualquier otra para APROBAR)',
       '4500123456789012'
     );
-    if (!cardInput) return;
+    if (cardInput === null) return;
 
+    const cardNumber = cardInput.replace(/\D/g, '');
+    if (cardNumber.length !== 16) {
+      setActionError('El número de tarjeta debe tener exactamente 16 dígitos.');
+      return;
+    }
+
+    setActionLoading(true);
+    setActionError(null);
+    setActionSuccess(null);
     try {
-      const res = await orderService.payOrder(order.id, cardInput.replace(/\D/g, ''));
-      if (res?.order) {
-        setOrder(res.order);
-      } else {
-        cargarPedido();
+      const result = await orderService.payOrder(order.id, cardNumber);
+      if (!result?.order || !result?.transaction) {
+        throw new Error('El servidor devolvió una respuesta de pago incompleta.');
       }
-      setActionSuccess('¡Pago simulado procesado correctamente!');
+      if (!['aprobada', 'rechazada'].includes(result.transaction.status)) {
+        throw new Error('El servidor devolvió un estado de pago no válido.');
+      }
+      applyOrderUpdate(result.order, result.transaction);
+      if (result.transaction.status === 'aprobada') {
+        setActionSuccess('¡Pago simulado aprobado correctamente!');
+      } else {
+        setActionError('El pago fue rechazado. El pedido sigue pendiente y puedes volver a intentarlo.');
+      }
     } catch (err) {
-      alert(err.message || 'Error al procesar el pago simulado.');
+      setActionError(err?.message || 'Error al procesar el pago simulado.');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -124,6 +205,12 @@ export default function OrderDetailPage() {
               <i className="bi bi-check-circle-fill me-2 fs-5"></i>
               <div>{actionSuccess}</div>
               <button type="button" className="btn-close" onClick={() => setActionSuccess(null)}></button>
+            </div>
+          )}
+          {actionError && (
+            <div className="alert alert-danger py-2 px-3 mb-4" role="alert">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              {actionError}
             </div>
           )}
 
@@ -263,17 +350,34 @@ export default function OrderDetailPage() {
                   </table>
                 </div>
 
-                {/* Acciones del Comprador */}
+                {/* Acciones según el participante y el estado del pedido */}
                 <div className="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
-                  {order.status === 'pendiente' && (
-                    <button type="button" className="btn btn-success btn-sm" onClick={handlePagar}>
+                  {isBuyer && order.status === 'pendiente' && (
+                    <button type="button" className="btn btn-success btn-sm" onClick={handlePagar} disabled={actionLoading}>
                       <i className="bi bi-credit-card me-1"></i> Pagar Pedido Ahora
                     </button>
                   )}
 
-                  {['pendiente', 'pagado'].includes(order.status) && (
-                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleCancelar}>
+                  {isBuyer && ['pendiente', 'pagado'].includes(order.status) && (
+                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={handleCancelar} disabled={actionLoading}>
                       <i className="bi bi-x-circle me-1"></i> Cancelar Pedido
+                    </button>
+                  )}
+
+                  {isSeller && order.status === 'pagado' && (
+                    <>
+                      <button type="button" className="btn btn-primary btn-sm" onClick={() => handleCambiarEstado('enviado')} disabled={actionLoading}>
+                        <i className="bi bi-truck me-1"></i> Marcar enviado
+                      </button>
+                      <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => handleCambiarEstado('listo_retiro')} disabled={actionLoading}>
+                        <i className="bi bi-geo-alt me-1"></i> Listo para retiro
+                      </button>
+                    </>
+                  )}
+
+                  {isSeller && ['enviado', 'listo_retiro'].includes(order.status) && (
+                    <button type="button" className="btn btn-success btn-sm" onClick={() => handleCambiarEstado('entregado')} disabled={actionLoading}>
+                      <i className="bi bi-check-circle me-1"></i> Marcar entregado
                     </button>
                   )}
                 </div>
