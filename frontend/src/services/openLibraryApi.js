@@ -5,9 +5,13 @@ export async function searchOpenLibraryBooks(query) {
 
   const cleanQuery = query.trim();
   const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(cleanQuery)}&limit=6`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      signal: controller.signal
+});
 
     if (!response.ok) {
       throw new Error(`Error en la consulta a Open Library: ${response.status} ${response.statusText}`);
@@ -38,8 +42,20 @@ export async function searchOpenLibraryBooks(query) {
     });
 
     return librosProcesados;
-  } catch (error) {
+    } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(
+        'Open Library no respondió en 8 segundos. Intenta nuevamente.'
+      );
+    }
+
     console.error('Error al consumir Open Library API:', error);
-    throw new Error(error.message || 'No fue posible conectar con el catálogo de Open Library');
+
+    throw new Error(
+      error.message || 'No fue posible conectar con el catálogo de Open Library'
+    );
+  } finally {
+    clearTimeout(timeoutId);
   }
+
 }
