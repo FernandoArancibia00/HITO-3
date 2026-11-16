@@ -29,8 +29,7 @@ import { ProductsModule } from './products/products.module';
         type: 'postgres',
         url: configService.getOrThrow<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        // Temporal hasta que existan migraciones (T05): por defecto false
-        synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
+        synchronize: false,
       }),
     }),
 
