@@ -1,0 +1,343 @@
+{
+  "info": {
+    "_postman_id": "b605dbb0-0049-4bab-9da7-179479080000",
+    "name": "T27 - Reglas de negocio de pedidos",
+    "description": "Flujo manual de carrito, pedido, pagos, transiciones inválidas y restauración de stock. Usa un producto de prueba aislado con stock disponible. Completa buyerToken, sellerToken y productId; sellerToken debe pertenecer al vendedor del producto.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Consultar producto y guardar stock inicial",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/products/{{productId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Producto disponible', function () { pm.response.to.have.status(200); });",
+              "pm.collectionVariables.set('initialStock', String(pm.response.json().stock));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Agregar una unidad al carrito",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": {{productId}},\n  \"quantity\": 1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/cart"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Carrito actualizado', function () { pm.response.to.have.status(201); });",
+              "pm.test('El carrito contiene el producto', function () {",
+              "  const cart = pm.response.json();",
+              "  pm.expect(cart.items.some((item) => Number(item.productId || item.product.id) === Number(pm.collectionVariables.get('productId')))).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Crear pedido desde el carrito",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/orders"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pedido creado', function () { pm.response.to.have.status(201); });",
+              "const order = pm.response.json();",
+              "pm.collectionVariables.set('orderId', String(order.id));",
+              "pm.test('El pedido queda pendiente', function () { pm.expect(order.status).to.eql('pendiente'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Rechazar pedido con carrito vacío",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          }
+        ],
+        "url": "{{baseUrl}}/orders"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Carrito vacío devuelve 400', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Rechazar transición inválida (pendiente a entregado)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{sellerToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"entregado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/orders/{{orderId}}/status"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Transición inválida devuelve 409', function () { pm.response.to.have.status(409); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Registrar pago rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardNumber\": \"4500123456780000\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/orders/{{orderId}}/pay"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pago rechazado sin cambiar el pedido', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const result = pm.response.json();",
+              "  pm.expect(result.transaction.status).to.eql('rechazada');",
+              "  pm.expect(result.order.status).to.eql('pendiente');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Registrar pago aprobado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cardNumber\": \"4500123456789012\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/orders/{{orderId}}/pay"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pago aprobado cambia el estado', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const result = pm.response.json();",
+              "  pm.expect(result.transaction.status).to.eql('aprobada');",
+              "  pm.expect(result.order.status).to.eql('pagado');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Cancelar pedido y devolver stock",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{buyerToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"cancelado\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/orders/{{orderId}}/status"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pedido cancelado', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('cancelado');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Verificar stock restaurado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/products/{{productId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('El producto recuperó el stock inicial', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(Number(pm.response.json().stock)).to.eql(Number(pm.collectionVariables.get('initialStock')));",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "buyerToken",
+      "value": ""
+    },
+    {
+      "key": "sellerToken",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "initialStock",
+      "value": ""
+    }
+  ]
+}

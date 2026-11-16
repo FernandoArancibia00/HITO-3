@@ -8,6 +8,9 @@ export default function MySalesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtro, setFiltro] = useState('todas');
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   // Cargar ventas del vendedor desde la API
   const cargarVentas = useCallback(async () => {
@@ -31,13 +34,29 @@ export default function MySalesPage() {
     const confirmar = window.confirm(`¿Confirmas cambiar el estado del Pedido #${orderId} a "${nuevoEstado}"?`);
     if (!confirmar) return;
 
+    setActionLoadingId(orderId);
+    setActionError(null);
+    setActionSuccess(null);
     try {
-      await orderService.updateOrderStatus(orderId, nuevoEstado);
-      setSales((prev) =>
-        prev.map((s) => (s.id === orderId ? { ...s, status: nuevoEstado } : s))
-      );
+      const updatedSale = await orderService.updateOrderStatus(orderId, nuevoEstado);
+      if (updatedSale?.status !== nuevoEstado) {
+        throw new Error('El servidor no confirmó el cambio de estado.');
+      }
+      setSales((prev) => prev.map((sale) => (
+        sale.id === orderId
+          ? {
+              ...sale,
+              ...updatedSale,
+              buyer: updatedSale.buyer ?? sale.buyer,
+              items: updatedSale.items ?? sale.items,
+            }
+          : sale
+      )));
+      setActionSuccess(`El pedido #${orderId} ahora está "${nuevoEstado}".`);
     } catch (err) {
-      alert(err.message || 'Error al actualizar el estado de la venta.');
+      setActionError(err?.message || 'Error al actualizar el estado de la venta.');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -75,6 +94,13 @@ export default function MySalesPage() {
           <i className="bi bi-box-seam"></i> Mis Publicaciones
         </Link>
       </div>
+
+      {actionSuccess && (
+        <div className="alert alert-success py-2" role="status">{actionSuccess}</div>
+      )}
+      {actionError && (
+        <div className="alert alert-danger py-2" role="alert">{actionError}</div>
+      )}
 
       <div className="row g-3 mb-4">
         <div className="col-12 col-md-4">
@@ -291,13 +317,20 @@ export default function MySalesPage() {
                             <button
                               type="button"
                               className="btn btn-primary btn-sm"
+                              disabled={actionLoadingId === sale.id}
                               onClick={() => handleCambiarEstado(sale.id, 'enviado')}
                             >
-                              <i className="bi bi-truck me-1"></i> Marcar como Enviado
+                              {actionLoadingId === sale.id ? (
+                                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              ) : (
+                                <i className="bi bi-truck me-1"></i>
+                              )}
+                              Marcar como Enviado
                             </button>
                             <button
                               type="button"
                               className="btn btn-outline-secondary btn-sm"
+                              disabled={actionLoadingId === sale.id}
                               onClick={() => handleCambiarEstado(sale.id, 'listo_retiro')}
                             >
                               <i className="bi bi-geo-alt me-1"></i> Listo para Retiro
@@ -310,6 +343,7 @@ export default function MySalesPage() {
                           <button
                             type="button"
                             className="btn btn-success btn-sm"
+                            disabled={actionLoadingId === sale.id}
                             onClick={() => handleCambiarEstado(sale.id, 'entregado')}
                           >
                             <i className="bi bi-check-circle me-1"></i> Confirmar Entrega

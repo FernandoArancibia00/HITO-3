@@ -71,6 +71,22 @@ Comprobación de PostgreSQL y MongoDB:
 
 `GET http://localhost:3000/api/health`
 
+## Pruebas de reglas de negocio (T27)
+
+Desde la carpeta `backend`, ejecuta:
+
+```bash
+npm test
+```
+
+El comando compila el backend y ejecuta las pruebas con el test runner integrado de Node.js (`node:test`), sin dependencias adicionales. Se verifican:
+
+- Rechazo de pedidos con el carrito vacío.
+- Rechazo por stock insuficiente al crear el pedido.
+- Rechazo de una transición de estado inválida.
+- Restauración del stock al cancelar un pedido pagado.
+
+Para probar el flujo completo contra la API y PostgreSQL, importa `docs/pruebas/t27-business-rules.postman_collection.json` en Postman. Completa `buyerToken`, `sellerToken` y `productId` con usuarios y un producto de prueba aislado; ejecuta las solicitudes en orden. La colección comprueba carrito vacío, transición inválida, pagos rechazado y aprobado, y restauración del stock.
 
 ## Integración con API pública — Open Library (T06)
 

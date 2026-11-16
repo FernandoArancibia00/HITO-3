@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
      "build": "nest build",
+    "test": "npm run build && node --test test/orders.service.test.js",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "migration:generate": "npm run build && typeorm migration:generate -d dist/database/data-source.js",
