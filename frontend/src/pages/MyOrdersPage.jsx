@@ -26,6 +26,9 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filtroEstado, setFiltroEstado] = useState('todos');
+  const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [actionSuccess, setActionSuccess] = useState(null);
+  const [actionError, setActionError] = useState(null);
 
   // Cargar pedidos desde la API
   const cargarPedidos = useCallback(async () => {
@@ -46,22 +49,32 @@ export default function MyOrdersPage() {
   }, [cargarPedidos]);
 
   const handleCancelarPedido = async (orderId, statusActual) => {
-    if (statusActual === 'enviado' || statusActual === 'entregado') {
-      alert('No se puede cancelar un pedido que ya está en camino o entregado.');
+    if (!['pendiente', 'pagado'].includes(statusActual)) {
+      setActionError('No se puede cancelar un pedido que ya fue enviado o entregado.');
       return;
     }
 
     const confirmar = window.confirm(`¿Estás seguro de que deseas cancelar el Pedido #${orderId}?`);
     if (!confirmar) return;
 
+    setActionLoadingId(orderId);
+    setActionError(null);
+    setActionSuccess(null);
     try {
-      await orderService.updateOrderStatus(orderId, 'cancelado');
-      // Actualizar en el estado local
+      const updatedOrder = await orderService.updateOrderStatus(orderId, 'cancelado');
+      if (updatedOrder?.status !== 'cancelado') {
+        throw new Error('El servidor no confirmó la cancelación del pedido.');
+      }
       setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, status: 'cancelado' } : o))
+        prev.map((order) =>
+          order.id === orderId ? { ...order, ...updatedOrder, status: updatedOrder.status } : order
+        )
       );
+      setActionSuccess(`El pedido #${orderId} fue cancelado.`);
     } catch (err) {
-      alert(err.message || 'Error al cancelar el pedido.');
+      setActionError(err?.message || 'Error al cancelar el pedido.');
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -99,6 +112,13 @@ export default function MyOrdersPage() {
           </div>
           <p className="text-muted mt-2 small">Cargando tus compras...</p>
         </div>
+      )}
+
+      {actionSuccess && (
+        <div className="alert alert-success py-2" role="status">{actionSuccess}</div>
+      )}
+      {actionError && (
+        <div className="alert alert-danger py-2" role="alert">{actionError}</div>
       )}
 
       {!loading && error && (
@@ -234,9 +254,15 @@ export default function MyOrdersPage() {
                         <button
                           type="button"
                           className="btn btn-outline-danger btn-sm"
+                          disabled={actionLoadingId === order.id}
                           onClick={() => handleCancelarPedido(order.id, order.status)}
                         >
-                          <i className="bi bi-x-circle me-1"></i> Cancelar Pedido
+                          {actionLoadingId === order.id ? (
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                          ) : (
+                            <i className="bi bi-x-circle me-1"></i>
+                          )}
+                          Cancelar Pedido
                         </button>
                       )}
 

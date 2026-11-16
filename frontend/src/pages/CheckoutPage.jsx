@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import orderService from '../services/orderService';
 
 export default function CheckoutPage({ onVolver, onPedidoCreado }) {
-  let cartCtx = null;
-  try {
-    cartCtx = useCart();
-  } catch {
-    // Si se usa fuera del Provider temporalmente
-  }
-
-  const items = cartCtx?.items || [];
-  const total = cartCtx?.total || 0;
-  const clearCart = cartCtx?.clearCart || (() => {});
+  const navigate = useNavigate();
+  const {
+    items,
+    total,
+    error: cartError,
+    recargarCarrito,
+  } = useCart();
 
   const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
@@ -20,7 +19,16 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [orderResult, setOrderResult] = useState(null); // { order, transaction }
+  const [pendingOrder, setPendingOrder] = useState(null);
+  const [orderResult, setOrderResult] = useState(null);
+
+  const volverAlCatalogo = () => {
+    if (onVolver) {
+      onVolver();
+    } else {
+      navigate('/');
+    }
+  };
 
   const handleCardNumberChange = (e) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
@@ -41,10 +49,10 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
     setCvv(raw);
   };
 
-  // Simulación de creación de pedido y pago contra el contrato de datos
-  const handleProcesarPago = (e) => {
+  const handleProcesarPago = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
+    setOrderResult(null);
 
     if (cardNumber.length !== 16) {
       setErrorMsg('El número de tarjeta debe tener exactamente 16 dígitos.');
@@ -58,52 +66,39 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
 
     setLoading(true);
 
-    setTimeout(() => {
-      // Si termina en "0000" = rechazada. Si no = aprobada.
-      const esRechazada = cardNumber.endsWith('0000');
-
-      const mockOrderId = Math.floor(1000 + Math.random() * 9000);
-      const mockOrder = {
-        id: mockOrderId,
-        buyerId: 1,
-        total: total,
-        status: esRechazada ? 'pendiente' : 'pagado',
-        createdAt: new Date().toISOString(),
-        items: items.map((it, idx) => ({
-          id: idx + 1,
-          orderId: mockOrderId,
-          productId: it.productId || it.product?.id,
-          sellerId: it.product?.sellerId || 1,
-          quantity: it.quantity || 1,
-          unitPrice: Number(it.product?.price ?? it.product?.precio ?? 0),
-          product: it.product,
-        })),
-      };
-
-      const mockTransaction = {
-        id: Math.floor(5000 + Math.random() * 5000),
-        orderId: mockOrderId,
-        amount: total,
-        method: 'simulado',
-        status: esRechazada ? 'rechazada' : 'aprobada',
-        createdAt: new Date().toISOString(),
-      };
-
-      setLoading(false);
-
-      if (esRechazada) {
-        setErrorMsg(
-          'Transacción simulada RECHAZADA (la tarjeta termina en 0000 según la regla del hito). El pedido quedó registrado como "pendiente". Puedes intentar con otra tarjeta.'
-        );
-        setOrderResult({ order: mockOrder, transaction: mockTransaction });
-      } else {
-        clearCart();
-        setOrderResult({ order: mockOrder, transaction: mockTransaction });
-        if (onPedidoCreado) {
-          onPedidoCreado(mockOrder);
+    try {
+      let order = pendingOrder;
+      if (!order) {
+        order = await orderService.createOrder();
+        if (!order?.id) {
+          throw new Error('El servidor no devolvió el pedido creado.');
         }
+        setPendingOrder(order);
+        await recargarCarrito();
       }
-    }, 1200);
+
+      const result = await orderService.payOrder(order.id, cardNumber);
+      if (!result?.order || !result?.transaction) {
+        throw new Error('El servidor devolvió una respuesta de pago incompleta.');
+      }
+      if (!['aprobada', 'rechazada'].includes(result.transaction.status)) {
+        throw new Error('El servidor devolvió un estado de pago no válido.');
+      }
+
+      setPendingOrder(result.order);
+      setOrderResult(result);
+      if (result.transaction.status === 'rechazada') {
+        setErrorMsg(
+          'El pago fue rechazado. El pedido quedó pendiente; puedes intentar nuevamente con otra tarjeta.'
+        );
+      } else if (onPedidoCreado) {
+        onPedidoCreado(result.order);
+      }
+    } catch (err) {
+      setErrorMsg(err?.message || 'No se pudo procesar el pedido o el pago.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Vista cuando el pedido fue aprobado exitosamente
@@ -142,17 +137,15 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
                 <div className="d-flex justify-content-between">
                   <span className="fw-bold">Monto Pagado:</span>
                   <span className="fw-bold text-unab fs-5">
-                    ${orderResult.order.total.toLocaleString('es-CL')} CLP
+                    ${Number(orderResult.order.total).toLocaleString('es-CL')} CLP
                   </span>
                 </div>
               </div>
 
               <div className="d-flex flex-column gap-2 mt-2">
-                {onVolver && (
-                  <button type="button" className="btn btn-unab py-2 fw-bold" onClick={onVolver}>
-                    <i className="bi bi-arrow-left me-2"></i>Volver al Catálogo
-                  </button>
-                )}
+                <button type="button" className="btn btn-unab py-2 fw-bold" onClick={volverAlCatalogo}>
+                  <i className="bi bi-arrow-left me-2"></i>Volver al Catálogo
+                </button>
               </div>
             </div>
           </div>
@@ -162,7 +155,7 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
   }
 
   // Vista cuando el carrito está vacío
-  if (items.length === 0 && !orderResult) {
+  if (items.length === 0 && !pendingOrder && !orderResult) {
     return (
       <div className="container py-5 text-center">
         <div className="py-5">
@@ -178,6 +171,9 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
       </div>
     );
   }
+
+  const summaryItems = pendingOrder?.items || items;
+  const summaryTotal = pendingOrder?.total ?? total;
 
   return (
     <div className="container py-4">
@@ -215,6 +211,12 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
                 <div>{errorMsg}</div>
               </div>
             )}
+            {cartError && !errorMsg && (
+              <div className="alert alert-danger py-2 px-3 small d-flex align-items-center mb-3" role="alert">
+                <i className="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
+                <div>{cartError}</div>
+              </div>
+            )}
 
             <form onSubmit={handleProcesarPago}>
               <div className="mb-3">
@@ -222,7 +224,7 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Ej. Damian Acevedo"
+                  placeholder="Ej. Juan Pérez"
                   value={cardHolder}
                   onChange={(e) => setCardHolder(e.target.value)}
                   required
@@ -290,7 +292,10 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
                 ) : (
                   <>
                     <i className="bi bi-lock-fill"></i>
-                    <span>Confirmar y Pagar ${total.toLocaleString('es-CL')} CLP</span>
+                    <span>
+                      {pendingOrder ? 'Intentar pago' : 'Confirmar y Pagar'} $
+                      {Number(summaryTotal).toLocaleString('es-CL')} CLP
+                    </span>
                   </>
                 )}
               </button>
@@ -306,16 +311,16 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
             </h5>
 
             <div className="d-flex flex-column gap-2 mb-3" style={{ maxHeight: '350px', overflowY: 'auto' }}>
-              {items.map((item) => {
+              {summaryItems.map((item) => {
                 const prod = item.product || item;
                 const nombre = prod.title || prod.nombre || 'Producto';
-                const precio = Number(prod.price ?? prod.precio ?? 0);
+                const precio = Number(item.unitPrice ?? prod.price ?? prod.precio ?? 0);
                 const imagen = prod.imageUrl || prod.imagen || 'https://placehold.co/100x100/ad0f0f/ffffff?text=UNAB';
                 const qty = item.quantity || 1;
                 const subtotal = precio * qty;
 
                 return (
-                  <div key={item.id} className="d-flex align-items-center gap-3 bg-white p-2 rounded border">
+                  <div key={item.id ?? item.productId} className="d-flex align-items-center gap-3 bg-white p-2 rounded border">
                     <img
                       src={imagen}
                       alt={nombre}
@@ -342,7 +347,7 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
 
             <div className="d-flex justify-content-between align-items-center mb-2">
               <span className="text-muted">Subtotal:</span>
-              <span className="fw-bold">${total.toLocaleString('es-CL')} CLP</span>
+              <span className="fw-bold">${Number(summaryTotal).toLocaleString('es-CL')} CLP</span>
             </div>
             <div className="d-flex justify-content-between align-items-center mb-3">
               <span className="text-muted">Entrega en Campus:</span>
@@ -352,7 +357,7 @@ export default function CheckoutPage({ onVolver, onPedidoCreado }) {
             <div className="d-flex justify-content-between align-items-center pt-2 border-top">
               <span className="fw-bold fs-5 text-dark">Total:</span>
               <span className="fw-bold fs-4 text-unab">
-                ${total.toLocaleString('es-CL')} CLP
+                ${Number(summaryTotal).toLocaleString('es-CL')} CLP
               </span>
             </div>
           </div>

@@ -10,15 +10,16 @@ export default function CartOffcanvas({
   onActualizarCantidad,
   onIrACheckout
 }) {
-  let contextValues = null;
-  try {
-    contextValues = useCart();
-  } catch {
-    // Si se usa fuera del Provider temporalmente
-  }
-
-  const cartItems = propsCart || contextValues?.items || [];
-  const errorMsg = contextValues?.error || null;
+  const {
+    items: contextItems,
+    total,
+    loading,
+    error: errorMsg,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+  } = useCart();
+  const cartItems = propsCart ?? contextItems;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -33,24 +34,24 @@ export default function CartOffcanvas({
   const handleRemove = (itemId) => {
     if (onEliminarDelCarrito) {
       onEliminarDelCarrito(itemId);
-    } else if (contextValues?.removeFromCart) {
-      contextValues.removeFromCart(itemId);
+    } else {
+      removeFromCart(itemId);
     }
   };
 
   const handleUpdateQty = (itemId, newQty) => {
     if (onActualizarCantidad) {
       onActualizarCantidad(itemId, newQty);
-    } else if (contextValues?.updateQuantity) {
-      contextValues.updateQuantity(itemId, newQty);
+    } else {
+      updateQuantity(itemId, newQty);
     }
   };
 
   const handleClear = () => {
     if (onVaciarCarrito) {
       onVaciarCarrito();
-    } else if (contextValues?.clearCart) {
-      contextValues.clearCart();
+    } else {
+      clearCart();
     }
   };
 
@@ -61,14 +62,6 @@ export default function CartOffcanvas({
     }
     onClose();
   };
-
-  // Cálculo del total
-  const totalPagar = cartItems.reduce((acc, item) => {
-    const prod = item.product || item;
-    const precio = Number(prod.price ?? prod.precio ?? 0);
-    const qty = item.quantity || 1;
-    return acc + precio * qty;
-  }, 0);
 
   const totalUnidades = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
 
@@ -113,7 +106,12 @@ export default function CartOffcanvas({
             </div>
           )}
 
-          {cartItems.length === 0 ? (
+          {cartItems.length === 0 && loading ? (
+            <div className="text-center my-auto py-5">
+              <span className="spinner-border text-unab" role="status" aria-hidden="true"></span>
+              <p className="text-muted mt-3 mb-0">Cargando carrito...</p>
+            </div>
+          ) : cartItems.length === 0 ? (
             <div className="text-center my-auto py-5">
               <i className="bi bi-cart-x text-muted" style={{ fontSize: '4rem' }}></i>
               <h5 className="mt-3 text-dark fw-bold">Tu carrito está vacío</h5>
@@ -172,6 +170,7 @@ export default function CartOffcanvas({
                         type="button"
                         className="btn btn-outline-danger btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center"
                         style={{ width: '30px', height: '30px', flexShrink: 0 }}
+                        disabled={loading}
                         onClick={() => handleRemove(itemId)}
                         title="Eliminar del carrito"
                         aria-label={`Eliminar ${nombre} del carrito`}
@@ -187,7 +186,7 @@ export default function CartOffcanvas({
                           <button
                             type="button"
                             className="btn btn-outline-secondary px-2"
-                            disabled={quantity <= 1}
+                            disabled={loading || quantity <= 1}
                             onClick={() => handleUpdateQty(itemId, quantity - 1)}
                             title="Disminuir cantidad"
                           >
@@ -199,7 +198,7 @@ export default function CartOffcanvas({
                           <button
                             type="button"
                             className="btn btn-outline-secondary px-2"
-                            disabled={quantity >= stockDisponible}
+                            disabled={loading || quantity >= stockDisponible}
                             onClick={() => handleUpdateQty(itemId, quantity + 1)}
                             title={quantity >= stockDisponible ? 'Stock máximo alcanzado' : 'Aumentar cantidad'}
                           >
@@ -237,7 +236,7 @@ export default function CartOffcanvas({
                 <span className="small text-muted">({totalUnidades} {totalUnidades === 1 ? 'unidad' : 'unidades'})</span>
               </div>
               <span className="fs-4 fw-bold text-unab">
-                ${totalPagar.toLocaleString('es-CL')} CLP
+                ${total.toLocaleString('es-CL')} CLP
               </span>
             </div>
 
@@ -246,6 +245,7 @@ export default function CartOffcanvas({
                 type="button"
                 className="btn btn-unab w-100 py-2 d-flex align-items-center justify-content-center gap-2 shadow-sm fw-bold"
                 onClick={handleCheckoutClick}
+                disabled={loading}
               >
                 <i className="bi bi-credit-card-fill"></i>
                 <span>Proceder al Pago / Checkout</span>
@@ -255,6 +255,7 @@ export default function CartOffcanvas({
                 type="button"
                 className="btn btn-link text-danger text-decoration-none btn-sm"
                 onClick={handleClear}
+                disabled={loading}
               >
                 Vaciar Carrito
               </button>

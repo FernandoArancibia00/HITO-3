@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import useFavorites from '../hooks/useFavorites';
 import productService from '../services/productService';
 import categoryService from '../services/categoryService';
 import Navbar from '../components/layout/Navbar';
@@ -32,6 +33,13 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { items: cartItems, totalItems, addToCart } = useCart();
+  const {
+    favorites,
+    notice: favoritesNotice,
+    dismissNotice: dismissFavoritesNotice,
+    toggleFavorite,
+    removeFavorite,
+  } = useFavorites();
 
   // =========================================================
   // 1. CATÁLOGO (GET /products) Y CATEGORÍAS (GET /categories)
@@ -47,25 +55,6 @@ export default function HomePage() {
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState(null);
-
-  // Favoritos locales (módulo de Damian, T24). Se descartan los guardados con el formato del Taller 2.
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const saved = localStorage.getItem('unab_marketplace_favorites');
-      const parsed = saved ? JSON.parse(saved) : [];
-      return Array.isArray(parsed) ? parsed.filter((p) => p && p.title && p.price !== undefined) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('unab_marketplace_favorites', JSON.stringify(favorites));
-    } catch {
-      // Ignorar errores de almacenamiento local
-    }
-  }, [favorites]);
 
   // =========================================================
   // 2. FILTROS (lo que escribe el usuario) Y FILTROS APLICADOS
@@ -218,12 +207,19 @@ export default function HomePage() {
 
   const [toastMessage, setToastMessage] = useState(null);
 
-  const triggerToast = (mensaje) => {
+  const triggerToast = useCallback((mensaje) => {
     setToastMessage(mensaje);
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!favoritesNotice) return undefined;
+    triggerToast(favoritesNotice.message);
+    const timeout = setTimeout(dismissFavoritesNotice, 3500);
+    return () => clearTimeout(timeout);
+  }, [favoritesNotice, dismissFavoritesNotice, triggerToast]);
 
   // =========================================================
   // 5. HANDLERS DE PRODUCTOS
@@ -264,7 +260,7 @@ export default function HomePage() {
       await productService.remove(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
       setTotal((prev) => Math.max(prev - 1, 0));
-      setFavorites((prev) => prev.filter((p) => p.id !== id));
+      await removeFavorite(id);
       if (selectedProductForDetail && selectedProductForDetail.id === id) {
         setIsDetailModalOpen(false);
         setSelectedProductForDetail(null);
@@ -299,25 +295,6 @@ export default function HomePage() {
     await addToCart(producto);
     // El carrito muestra el resultado (o el error de stock que deja CartContext).
     setIsCartOpen(true);
-  };
-
-  // =========================================================
-  // 7. FAVORITOS (locales hasta T24)
-  // =========================================================
-  const handleToggleFavorito = (producto) => {
-    const yaEsFavorito = favorites.some((f) => f.id === producto.id);
-
-    if (yaEsFavorito) {
-      setFavorites((prev) => prev.filter((f) => f.id !== producto.id));
-      triggerToast(`"${producto.title}" eliminado de favoritos.`);
-    } else {
-      setFavorites((prev) => [...prev, producto]);
-      triggerToast(`"${producto.title}" añadido a tus favoritos ❤️.`);
-    }
-  };
-
-  const handleEliminarFavorito = (id) => {
-    setFavorites((prev) => prev.filter((f) => f.id !== id));
   };
 
   // =========================================================
@@ -407,7 +384,7 @@ export default function HomePage() {
               producto={producto}
               onVerDetalles={handleVerDetalles}
               onAgregarAlCarrito={handleAgregarAlCarrito}
-              onToggleFavorito={handleToggleFavorito}
+              onToggleFavorito={toggleFavorite}
               onEliminarProducto={handleEliminarProducto}
               esFavorito={favorites.some((f) => f.id === producto.id)}
               estaEnCarrito={cartIds.includes(producto.id)}
@@ -464,7 +441,10 @@ export default function HomePage() {
               <button
                 type="button"
                 className="btn-close btn-close-white me-2 m-auto"
-                onClick={() => setToastMessage(null)}
+                onClick={() => {
+                  setToastMessage(null);
+                  dismissFavoritesNotice();
+                }}
                 aria-label="Cerrar notificación"
               ></button>
             </div>
@@ -604,7 +584,7 @@ export default function HomePage() {
           setSelectedProductForDetail(null);
         }}
         onAgregarAlCarrito={handleAgregarAlCarrito}
-        onToggleFavorito={handleToggleFavorito}
+        onToggleFavorito={toggleFavorite}
         esFavorito={
           selectedProductForDetail
             ? favorites.some((f) => f.id === selectedProductForDetail.id)
@@ -655,7 +635,7 @@ export default function HomePage() {
         isOpen={isFavoritesOpen}
         onClose={() => setIsFavoritesOpen(false)}
         favorites={favorites}
-        onEliminarFavorito={handleEliminarFavorito}
+        onEliminarFavorito={removeFavorite}
         onMoverAlCarrito={handleAgregarAlCarrito}
         cartIds={cartIds}
       />
